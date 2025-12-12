@@ -27,7 +27,7 @@ export default async function RacePage({
   const voted = jar.get(`race_${race.id}_voted`)?.value === "1";
 
   const horseName = (id: string) => {
-    const h = race.horses.find((x) => x.id === id);
+    const h = race.horses.find((x: { id: string; name: string }) => x.id === id);
     return h?.name ?? id;
   };
 
