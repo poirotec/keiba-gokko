@@ -35,8 +35,10 @@ import VoteForm from "./VoteForm";
 
   const closed = !!race.result;
 
-  const horseName = (id: string) =>
-    race.horses.find((h) => h.id === id)?.name ?? id;
+  const horseName = (id: string) => {
+    const h = race.horses.find((h) => h.id === id);
+    return h?.name ?? id;
+  };
 
   return (
     <div style={{ padding: 16, maxWidth: 900, margin: "0 auto" }}>
