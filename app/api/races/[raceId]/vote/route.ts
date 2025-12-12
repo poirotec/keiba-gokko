@@ -4,9 +4,6 @@ import { NextRequest, NextResponse } from "next/server";
 import crypto from "node:crypto";
 import { getRace, addPick } from "@/lib/storage";
 
-console.log("DEBUG PICKS:", debug);
-
-
 function getRaceIdFromPath(req: NextRequest) {
   const parts = req.nextUrl.pathname.split("/").filter(Boolean);
   const idx = parts.indexOf("races");
