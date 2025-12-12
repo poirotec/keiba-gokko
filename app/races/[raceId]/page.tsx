@@ -3,14 +3,25 @@ import { getRace, listPicksByRace } from "@/lib/storage";
 import { computeHorseWinOdds, isHit } from "@/lib/odds";
 import VoteForm from "./VoteForm";
 
-export default async function RacePage({ params }: { params: { raceId: string } }) {
-  const raceId = params.raceId;
-  const race = getRace(raceId);
+  export default async function RacePage({
+    params,
+  }: {
+    params: { raceId: string };
+  }) {
+    const race = await getRace(params.raceId);
 
-  if (!race) return <div style={{ padding: 16 }}>Race not found: {raceId}</div>;
+    if (!race) {
+      return (
+        <div style={{ padding: 16 }}>
+          Race not found: {params.raceId}
+        </div>
+      );
+    }
 
-  const race = await getRace(params.raceId);
   const allPicks = await listPicksByRace(race.id);
+
+  // 以降、race / allPicks を使う処理
+}
 
   // ? 各馬（1着予想）オッズ
   const { N, entries } = computeHorseWinOdds(race, allPicks, 1);
