@@ -28,6 +28,7 @@ export default async function RacesPage() {
       closed: !!result,
       odds: computeHorseWinOdds(race, picks, 1),
       trifecta: computeTrifectaPopularity(picks),
+      __debugPickCount: picks.length,
     };
   }
 
