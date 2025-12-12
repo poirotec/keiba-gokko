@@ -11,11 +11,7 @@ export default async function RacePage({
   const race = await getRace(params.raceId);
 
   if (!race) {
-    return (
-      <div style={{ padding: 16 }}>
-        Race not found: {params.raceId}
-      </div>
-    );
+    return <div style={{ padding: 16 }}>Race not found: {params.raceId}</div>;
   }
 
   const allPicks = await listPicksByRace(race.id);
@@ -23,6 +19,7 @@ export default async function RacePage({
   const { entries } = computeHorseWinOdds(race, allPicks, 1);
   const trifecta = computeTrifectaPopularity(allPicks).entries;
 
+  // cookie は「表示用に読んでおくだけ」（VoteFormへは渡さない）
   const jar = await cookies();
   const voted = jar.get(`race_${race.id}_voted`)?.value === "1";
 
@@ -36,6 +33,21 @@ export default async function RacePage({
       <h1 style={{ fontSize: 22, fontWeight: 700, marginBottom: 12 }}>
         {race.title}
       </h1>
+
+      {voted && (
+        <div
+          style={{
+            marginBottom: 12,
+            padding: 10,
+            borderRadius: 12,
+            border: "1px solid rgba(255,255,255,0.12)",
+            opacity: 0.9,
+            fontSize: 13,
+          }}
+        >
+          ? この端末（cookie）からは投票済みです
+        </div>
+      )}
 
       <div style={{ marginBottom: 16 }}>
         <h2 style={{ fontSize: 16, fontWeight: 700, marginBottom: 8 }}>
@@ -86,9 +98,10 @@ export default async function RacePage({
                   justifyContent: "space-between",
                   gap: 12,
                 }}
-             >
+              >
                 <div style={{ fontWeight: 700 }}>
-                  {horseName(firstId)} → {horseName(secondId)} → {horseName(thirdId)}
+                  {horseName(firstId)} → {horseName(secondId)} →{" "}
+                  {horseName(thirdId)}
                 </div>
                 <div style={{ opacity: 0.8, fontSize: 13 }}>{t.count} 票</div>
               </div>
@@ -98,7 +111,8 @@ export default async function RacePage({
       </div>
 
       <div style={{ marginTop: 24 }}>
-        <VoteForm raceId={race.id} horses={race.horses} voted={voted} />
+        {/* voted は VoteForm の型に無いので渡さない */}
+        <VoteForm raceId={race.id} horses={race.horses} />
       </div>
     </div>
   );
