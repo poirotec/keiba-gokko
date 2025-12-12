@@ -21,7 +21,7 @@ export default async function RacePage({
   const allPicks = await listPicksByRace(race.id);
 
   const { entries } = computeHorseWinOdds(race, allPicks, 1);
-  const trifecta = computeTrifectaPopularity(allPicks);
+  const trifecta = computeTrifectaPopularity(allPicks).entries;
 
   const jar = await cookies();
   const voted = jar.get(`race_${race.id}_voted`)?.value === "1";
