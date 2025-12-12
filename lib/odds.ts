@@ -1,74 +1,16 @@
-import type { Pick } from "./storage";
-
 export type ComboKey = string; // "first-second-third"
 
-export function comboKey(firstId: string, secondId: string, thirdId: string): ComboKey {
-  return `${firstId}-${secondId}-${thirdId}`;
-}
+// picks が持っていれば良い最小の形だけ定義（衝突しない）
+type PickLike = {
+  firstId: string;
+  secondId: string;
+  thirdId: string;
+};
 
-/**
- * DBなし・購入なしなので「投稿数ベースの擬似オッズ」
- * N: 総投稿数、c: その組の投稿数
- * odds = (N + alpha) / (c + alpha)   (alpha=1 推奨)
- */
-export function computePseudoOdds(picks: Pick[], alpha = 1) {
-  const N = picks.length;
-  const counts = new Map<ComboKey, number>();
+type Horse = { id: string; number: number; name: string; icon?: string };
+type Race = { id: string; title: string; horses: Horse[] };
 
-  for (const p of picks) {
-    const k = comboKey(p.firstId, p.secondId, p.thirdId);
-    counts.set(k, (counts.get(k) ?? 0) + 1);
-  }
-
-  const entries = [...counts.entries()].map(([k, c]) => {
-    const odds = (N + alpha) / (c + alpha);
-    const share = N > 0 ? c / N : 0;
-    return { key: k, count: c, odds, share };
-  });
-
-  // 人気順（count desc）
-  entries.sort((a, b) => b.count - a.count);
-
-  return { N, entries };
-}
-
-export function isHit(
-  result: { firstId: string; secondId: string; thirdId: string } | undefined,
-  pick: { firstId: string; secondId: string; thirdId: string }
-) {
-  if (!result) return false;
-  return (
-    result.firstId === pick.firstId &&
-    result.secondId === pick.secondId &&
-    result.thirdId === pick.thirdId
-  );
-}
-
-import type { Pick, Race } from "./storage";
-
-export function computeHorseWinOdds(race: Race, picks: Pick[], alpha = 1) {
-  const N = picks.length;
-  const counts = new Map<string, number>();
-
-  for (const h of race.horses) counts.set(h.id, 0);
-  for (const p of picks) counts.set(p.firstId, (counts.get(p.firstId) ?? 0) + 1);
-
-  const entries = race.horses.map((h) => {
-    const c = counts.get(h.id) ?? 0;
-    const odds = (N + alpha) / (c + alpha);
-    const share = N > 0 ? c / N : 0;
-    return { horseId: h.id, number: h.number, name: h.name, count: c, odds, share };
-  });
-
-  // 人気順（1着指名回数が多い順）
-  entries.sort((a, b) => b.count - a.count);
-
-  return { N, entries };
-}
-
-import type { Pick } from "./storage";
-
-export function computeTrifectaPopularity(picks: Pick[]) {
+export function computeTrifectaPopularity(picks: PickLike[]) {
   const map = new Map<string, number>();
 
   for (const p of picks) {
@@ -84,4 +26,48 @@ export function computeTrifectaPopularity(picks: Pick[]) {
     total: picks.length,
     entries,
   };
+}
+
+/**
+ * 擬似単勝オッズ（1着に選ばれた人気から算出）
+ * - 投票が0のときは空
+ * - count=0の馬は share=0, odds=Infinity 扱いになるので、表示側で除外するのが無難
+ */
+export function computeHorseWinOdds(race: Race, picks: PickLike[], margin: number = 1) {
+  // 1着票のカウント
+  const firstCount = new Map<string, number>();
+  for (const h of race.horses) firstCount.set(h.id, 0);
+
+  for (const p of picks) {
+    firstCount.set(p.firstId, (firstCount.get(p.firstId) ?? 0) + 1);
+  }
+
+  const N = picks.length;
+
+  // N=0なら空で返す
+  if (N === 0) {
+    return { N: 0, entries: [] as any[] };
+  }
+
+  const entries = race.horses
+    .map((h) => {
+      const count = firstCount.get(h.id) ?? 0;
+      const share = count / N;
+      // 擬似単勝：人気が高いほどオッズが低い（単純な逆数モデル）
+      // margin は「控除率っぽい調整」（1ならそのまま）
+      const odds = share > 0 ? (1 / share) * margin : Number.POSITIVE_INFINITY;
+      return {
+        horseId: h.id,
+        number: h.number,
+        name: h.name,
+        icon: (h as any).icon,
+        count,
+        share,
+        odds,
+      };
+    })
+    // 表示は人気順（count desc）→ 枠番順で安定
+    .sort((a, b) => b.count - a.count || a.number - b.number);
+
+  return { N, entries };
 }
