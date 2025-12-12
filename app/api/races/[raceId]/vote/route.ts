@@ -3,14 +3,6 @@ export const runtime = "nodejs";
 import { NextRequest, NextResponse } from "next/server";
 import crypto from "node:crypto";
 import { getRace, addPick } from "@/lib/storage";
-const debug = await fetch(
-  `${process.env.UPSTASH_REDIS_REST_URL}/lrange/race:${raceId}:picks/0/-1`,
-  {
-    headers: {
-      Authorization: `Bearer ${process.env.UPSTASH_REDIS_REST_TOKEN}`,
-    },
-  }
-).then(r => r.json());
 
 console.log("DEBUG PICKS:", debug);
 
