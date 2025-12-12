@@ -73,25 +73,27 @@ export default async function RacePage({
         </h2>
 
         <div style={{ display: "grid", gap: 8 }}>
-          {trifecta.slice(0, 20).map((t) => (
-            <div
-              key={t.key}
-              style={{
-                border: "1px solid rgba(255,255,255,0.12)",
-                borderRadius: 12,
-                padding: 10,
-                display: "flex",
-                justifyContent: "space-between",
-                gap: 12,
-              }}
-            >
-              <div style={{ fontWeight: 700 }}>
-                {horseName(t.firstId)} → {horseName(t.secondId)} →{" "}
-                {horseName(t.thirdId)}
+          {trifecta.slice(0, 20).map((t) => {
+            const [firstId, secondId, thirdId] = t.key.split("-");
+            return (
+              <div
+                key={t.key}
+                style={{
+                  border: "1px solid rgba(255,255,255,0.12)",
+                  borderRadius: 12,
+                  padding: 10,
+                  display: "flex",
+                  justifyContent: "space-between",
+                  gap: 12,
+                }}
+             >
+                <div style={{ fontWeight: 700 }}>
+                  {horseName(firstId)} → {horseName(secondId)} → {horseName(thirdId)}
+                </div>
+                <div style={{ opacity: 0.8, fontSize: 13 }}>{t.count} 票</div>
               </div>
-              <div style={{ opacity: 0.8, fontSize: 13 }}>{t.count} 票</div>
-            </div>
-          ))}
+            );
+          })}
         </div>
       </div>
 
