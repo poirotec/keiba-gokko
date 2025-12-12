@@ -1,123 +1,103 @@
 import { cookies } from "next/headers";
 import { getRace, listPicksByRace } from "@/lib/storage";
-import { computeHorseWinOdds, isHit } from "@/lib/odds";
+import { computeHorseWinOdds, computeTrifectaPopularity } from "@/lib/odds";
 import VoteForm from "./VoteForm";
 
-  export default async function RacePage({
-    params,
-  }: {
-    params: { raceId: string };
-  }) {
-    const race = await getRace(params.raceId);
+export default async function RacePage({
+  params,
+}: {
+  params: { raceId: string };
+}) {
+  const race = await getRace(params.raceId);
 
-    if (!race) {
-      return (
-        <div style={{ padding: 16 }}>
-          Race not found: {params.raceId}
-        </div>
-      );
-    }
+  if (!race) {
+    return (
+      <div style={{ padding: 16 }}>
+        Race not found: {params.raceId}
+      </div>
+    );
+  }
 
   const allPicks = await listPicksByRace(race.id);
 
-  // 以降、race / allPicks を使う処理
-}
+  const { entries } = computeHorseWinOdds(race, allPicks, 1);
+  const trifecta = computeTrifectaPopularity(allPicks);
 
-  // ? 各馬（1着予想）オッズ
-  const { N, entries } = computeHorseWinOdds(race, allPicks, 1);
-
-  // ? Next 16: cookies() は async
   const jar = await cookies();
-
-  const voted = jar.get(`race_${raceId}_voted`)?.value === "1";
-  const pickCookie = jar.get(`race_${raceId}_pick`)?.value; // "p01.p02.p03"
-  const myPickIds = pickCookie?.split(".") ?? null;
-
-  const closed = !!race.result;
+  const voted = jar.get(`race_${race.id}_voted`)?.value === "1";
 
   const horseName = (id: string) => {
-    const h = race.horses.find((h) => h.id === id);
+    const h = race.horses.find((x) => x.id === id);
     return h?.name ?? id;
   };
 
   return (
     <div style={{ padding: 16, maxWidth: 900, margin: "0 auto" }}>
-      <h1>{race.title}</h1>
-      <p>状態: {closed ? "確定済み（投票終了）" : "受付中"}</p>
+      <h1 style={{ fontSize: 22, fontWeight: 700, marginBottom: 12 }}>
+        {race.title}
+      </h1>
 
-      <h2>出走（{race.horses.length}人）</h2>
-      <ul>
-        {[...race.horses]
-          .sort((a, b) => a.number - b.number)
-          .map((h) => (
-            <li key={h.id}>
-              {h.number}. {h.name}
-            </li>
-          ))}
-      </ul>
+      <div style={{ marginBottom: 16 }}>
+        <h2 style={{ fontSize: 16, fontWeight: 700, marginBottom: 8 }}>
+          各馬（1着予想）オッズ
+        </h2>
 
-      <hr />
-
-      <h2>投票（三連単）</h2>
-      {voted ? (
-        <div>
-          <p>このレースには投票済みです。</p>
-          {myPickIds?.length === 3 && (
-            <p>
-              あなたの予想：{horseName(myPickIds[0])} - {horseName(myPickIds[1])} -{" "}
-              {horseName(myPickIds[2])}
-            </p>
-          )}
-        </div>
-      ) : closed ? (
-        <p>結果が確定したため投票は終了しました。</p>
-      ) : (
-        <VoteForm raceId={raceId} horses={race.horses} />
-      )}
-
-      <hr />
-
-      <h2>各馬オッズ（1着予想の人気から計算）</h2>
-      <p>総投票数: {N}</p>
-      {entries.length === 0 ? (
-        <p>まだ投票がありません。</p>
-      ) : (
-        <ol>
+        <div
+          style={{
+            display: "grid",
+            gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))",
+            gap: 8,
+          }}
+        >
           {entries.map((e) => (
-            <li key={e.horseId}>
-              {e.number}. {e.name} / 1着指名 {e.count} / 人気 {(e.share * 100).toFixed(1)}% / 擬似単勝{" "}
-              {e.odds.toFixed(2)}
-            </li>
+            <div
+              key={e.horseId}
+              style={{
+                border: "1px solid rgba(255,255,255,0.12)",
+                borderRadius: 12,
+                padding: 10,
+              }}
+            >
+              <div style={{ fontWeight: 700 }}>{horseName(e.horseId)}</div>
+              <div style={{ opacity: 0.8, fontSize: 13 }}>
+                {e.odds.toFixed(2)} 倍
+              </div>
+            </div>
           ))}
-        </ol>
-      )}
-
-      <hr />
-
-      <h2>結果</h2>
-      {race.result ? (
-        <div>
-          <p>
-            1着: {horseName(race.result.firstId)} / 2着: {horseName(race.result.secondId)} / 3着:{" "}
-            {horseName(race.result.thirdId)}
-          </p>
-
-          {voted && myPickIds?.length === 3 && (
-            <p>
-              あなたの判定：
-              {isHit(race.result, {
-                firstId: myPickIds[0],
-                secondId: myPickIds[1],
-                thirdId: myPickIds[2],
-              })
-                ? "? 的中"
-                : "? ハズレ"}
-            </p>
-          )}
         </div>
-      ) : (
-        <p>未確定（/admin から入力）</p>
-      )}
+      </div>
+
+      <div style={{ marginBottom: 16 }}>
+        <h2 style={{ fontSize: 16, fontWeight: 700, marginBottom: 8 }}>
+          三連単 人気（投票数順）
+        </h2>
+
+        <div style={{ display: "grid", gap: 8 }}>
+          {trifecta.slice(0, 20).map((t) => (
+            <div
+              key={t.key}
+              style={{
+                border: "1px solid rgba(255,255,255,0.12)",
+                borderRadius: 12,
+                padding: 10,
+                display: "flex",
+                justifyContent: "space-between",
+                gap: 12,
+              }}
+            >
+              <div style={{ fontWeight: 700 }}>
+                {horseName(t.firstId)} → {horseName(t.secondId)} →{" "}
+                {horseName(t.thirdId)}
+              </div>
+              <div style={{ opacity: 0.8, fontSize: 13 }}>{t.count} 票</div>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      <div style={{ marginTop: 24 }}>
+        <VoteForm raceId={race.id} horses={race.horses} voted={voted} />
+      </div>
     </div>
   );
 }
