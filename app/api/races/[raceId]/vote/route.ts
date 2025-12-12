@@ -47,13 +47,10 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "DUPLICATE_PICK" }, { status: 400 });
   }
 
-  const { voterId, created } = getOrCreateVoterId(req);
-
   // voterId は今はまだ使わない（1人1票のRedis実装が整ってから使う）
   const { voterId, created } = getOrCreateVoterId(req);
 
   await addPick(raceId, { firstId, secondId, thirdId });
-
 
   const res = NextResponse.json({ ok: true });
 

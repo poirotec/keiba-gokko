@@ -2,7 +2,7 @@ export const dynamic = "force-dynamic";
 
 import { cookies } from "next/headers";
 import RacesTabs from "./RacesTabs";
-import { getRace, listPicksByRace, getRaceResult } from "@/lib/storage";
+import { getRace, listPicksByRace } from "@/lib/storage";
 import { computeHorseWinOdds, computeTrifectaPopularity } from "@/lib/odds";
 
 export default async function RacesPage() {

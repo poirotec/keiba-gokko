@@ -127,7 +127,8 @@ export default function RacesTabs({ heavy, light }: { heavy: RaceView; light: Ra
           <p className="mt-1 text-sm text-neutral-600">
             三連単で予想！オッズは疑似計算です。
           <p className="text-xs opacity-60">
-            DEBUG picks: {heavy.__debugPickCount}
+            {"DEBUG picks: "}
+            {heavy.__debugPickCount}
           </p>
         </div>
 
