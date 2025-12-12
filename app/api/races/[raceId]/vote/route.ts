@@ -2,7 +2,7 @@ export const runtime = "nodejs";
 
 import { NextRequest, NextResponse } from "next/server";
 import crypto from "node:crypto";
-import { getRace, addPickOnce } from "@/lib/storage";
+import { getRace, addPick } from "@/lib/storage";
 const debug = await fetch(
   `${process.env.UPSTASH_REDIS_REST_URL}/lrange/race:${raceId}:picks/0/-1`,
   {
@@ -49,10 +49,11 @@ export async function POST(req: NextRequest) {
 
   const { voterId, created } = getOrCreateVoterId(req);
 
-  const r = await addPickOnce(raceId, voterId, { firstId, secondId, thirdId });
-  if (!r.ok) {
-    return NextResponse.json({ error: "ALREADY_VOTED" }, { status: 409 });
-  }
+  // voterId は今はまだ使わない（1人1票のRedis実装が整ってから使う）
+  const { voterId, created } = getOrCreateVoterId(req);
+
+  await addPick(raceId, { firstId, secondId, thirdId });
+
 
   const res = NextResponse.json({ ok: true });
 
