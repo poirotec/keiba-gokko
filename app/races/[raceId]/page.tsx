@@ -9,7 +9,8 @@ export default async function RacePage({ params }: { params: { raceId: string } 
 
   if (!race) return <div style={{ padding: 16 }}>Race not found: {raceId}</div>;
 
-  const allPicks = listPicksByRace(raceId);
+  const race = await getRace(params.raceId);
+  const allPicks = await listPicksByRace(race.id);
 
   // ? 各馬（1着予想）オッズ
   const { N, entries } = computeHorseWinOdds(race, allPicks, 1);
