@@ -123,7 +123,7 @@ export default function RacesTabs({ heavy, light }: { heavy: RaceView; light: Ra
       <div className="mx-auto max-w-6xl px-4 py-8">
         {/* Title */}
         <div className="mb-6">
-          <h1 className="text-2xl font-bold tracking-tight text-neutral-900">プロ体体重競馬ごっこ</h1>
+          <h1 className="text-2xl font-bold tracking-tight text-neutral-900">プロ体体重競馬ごっこ(非公式)</h1>
           <p className="mt-1 text-sm text-neutral-600">
             三連単で予想！オッズは疑似計算です。
           </p>
